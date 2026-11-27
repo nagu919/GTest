@@ -1,0 +1,626 @@
+<title>Burn Rate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a founder's operating console. KPI rail on the left, the month's plan in the middle, the company log on the right; stacks to one column on phones. */
+:root{
+  --bg:#eef0ec; --surface:#ffffff; --sunk:#e4e7e1; --line:#cfd4cc;
+  --ink:#14181a; --muted:#5d6661;
+  --cash:#0e7a5a; --cash-soft:#d5efe4;
+  --heat:#d2452c; --heat-soft:#f8ddd6;
+  --amber:#b97c00; --amber-soft:#f6ead0;
+  --focus:#2f54d6;
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'Instrument Sans','Segoe UI',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1211; --surface:#161c1a; --sunk:#1d2422; --line:#2b3431;
+  --ink:#e7ece9; --muted:#93a09a;
+  --cash:#3fcf9c; --cash-soft:#163a2e;
+  --heat:#ff7a5c; --heat-soft:#3e1d16;
+  --amber:#f0b43c; --amber-soft:#3a2c0e;
+  --focus:#7f9bff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1211; --surface:#161c1a; --sunk:#1d2422; --line:#2b3431;
+  --ink:#e7ece9; --muted:#93a09a;
+  --cash:#3fcf9c; --cash-soft:#163a2e;
+  --heat:#ff7a5c; --heat-soft:#3e1d16;
+  --amber:#f0b43c; --amber-soft:#3a2c0e;
+  --focus:#7f9bff; color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.lab{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* header */
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px;justify-content:space-between}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;min-width:0}
+.logo{font-family:var(--font-display);font-weight:800;font-size:1.7rem;letter-spacing:-.02em;margin:0;display:flex;align-items:center;gap:8px}
+.logo .flame{width:14px;height:20px;background:var(--heat);border-radius:50% 50% 45% 45%/60% 60% 40% 40%;display:inline-block;transform:rotate(8deg)}
+#coname{font-family:var(--font-display);font-weight:700;font-size:1.05rem;background:transparent;border:1px dashed var(--line);border-radius:6px;padding:3px 8px;color:var(--ink);width:14ch;min-width:0}
+.hstats{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:.82rem;white-space:nowrap}
+.chip b{font-family:var(--font-mono);font-weight:600}
+.chip.stage{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* grid */
+.grid{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr) minmax(0,320px);gap:16px;align-items:start}
+@media (max-width:1100px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.log-col{grid-column:1/-1}}
+@media (max-width:720px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.box h2{margin:0;font-family:var(--font-display);font-weight:700;font-size:1.02rem;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.box h2 .lab{font-family:var(--font-body)}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.kpi{display:flex;flex-direction:column;gap:1px;min-width:0}
+.kpi .v{font-family:var(--font-mono);font-weight:600;font-size:1.22rem;letter-spacing:-.02em}
+.kpi .d{font-family:var(--font-mono);font-size:.74rem;color:var(--muted)}
+.kpi .d.up{color:var(--cash)} .kpi .d.down{color:var(--heat)}
+.kpi.big{grid-column:1/-1}
+.kpi.big .v{font-size:2rem}
+.runway{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:.85rem;font-weight:600}
+.runway.ok{background:var(--cash-soft);color:var(--cash)} .runway.warn{background:var(--amber-soft);color:var(--amber)} .runway.bad{background:var(--heat-soft);color:var(--heat)}
+.meters{display:flex;flex-direction:column;gap:9px}
+.meter{display:grid;grid-template-columns:6.4rem 1fr 2.4rem;align-items:center;gap:8px;font-size:.84rem}
+.meter .track{height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.meter .fill{height:100%;border-radius:4px;transition:width .4s ease}
+.meter .n{font-family:var(--font-mono);font-size:.78rem;text-align:right;color:var(--muted)}
+svg.chart{width:100%;height:auto;display:block}
+
+/* plan */
+.focusbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pips{display:flex;gap:6px}
+.pip{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink)}
+.pip.used{background:var(--ink)}
+.actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.act{display:flex;flex-direction:column;gap:6px;text-align:left;padding:12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;min-height:118px;position:relative;transition:transform .12s ease,border-color .12s ease}
+.act:hover:not(:disabled){border-color:var(--ink);transform:translateY(-1px)}
+.act:disabled{opacity:.45;cursor:not-allowed}
+.act .t{font-family:var(--font-display);font-weight:700;font-size:.98rem;display:flex;justify-content:space-between;gap:8px}
+.act .t .c{font-family:var(--font-mono);font-size:.72rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.act .e{font-size:.8rem;color:var(--muted);line-height:1.35}
+.act .q{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;border-radius:11px;background:var(--focus);color:var(--surface);font-family:var(--font-mono);font-size:.75rem;display:grid;place-items:center;padding:0 6px}
+.queue{display:flex;flex-wrap:wrap;gap:6px;min-height:30px;align-items:center}
+.qi{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:4px 9px;font-size:.8rem;cursor:pointer}
+.qi::after{content:"×";opacity:.7}
+.empty{font-size:.84rem;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.endbtn{font-family:var(--font-display);font-weight:800;font-size:1.05rem;background:var(--heat);color:#fff;border:0;border-radius:8px;padding:12px 20px;cursor:pointer;display:inline-flex;gap:10px;align-items:center}
+.endbtn:hover{filter:brightness(1.08)}
+.endbtn kbd{font-family:var(--font-mono);font-size:.68rem;opacity:.8;border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:0 5px}
+
+/* team + pricing */
+.team{display:flex;flex-direction:column;gap:8px}
+.role{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--bg)}
+.role .nm{font-weight:600;font-size:.9rem}
+.role .ds{font-size:.76rem;color:var(--muted)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:30px;height:30px;border-radius:6px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:var(--font-mono);font-size:1rem}
+.stepper button:disabled{opacity:.35;cursor:not-allowed}
+.stepper span{font-family:var(--font-mono);font-weight:600;min-width:2ch;text-align:center}
+.tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tier{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px}
+.tier[aria-pressed="true"]{border-color:var(--ink);background:var(--surface);box-shadow:inset 0 0 0 1px var(--ink)}
+.tier b{font-family:var(--font-mono)}
+.tier small{color:var(--muted);font-size:.72rem;line-height:1.3}
+.goal{display:flex;flex-direction:column;gap:6px;font-size:.84rem}
+.goal .track{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.goal .fill{height:100%;background:var(--cash)}
+
+/* log */
+.log{display:flex;flex-direction:column;gap:12px;max-height:780px;overflow-y:auto;padding-right:4px}
+.month{display:flex;flex-direction:column;gap:5px}
+.month h3{margin:0;font-family:var(--font-mono);font-size:.74rem;font-weight:600;color:var(--muted);letter-spacing:.06em;display:flex;justify-content:space-between}
+.li{font-size:.84rem;padding-left:12px;border-left:2px solid var(--line);line-height:1.4}
+.li.good{border-color:var(--cash)} .li.bad{border-color:var(--heat)} .li.event{border-color:var(--amber)} .li.big{border-color:var(--focus);font-weight:600}
+
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(10,14,13,.55);display:grid;place-items:center;z-index:20;overflow-y:auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(20px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-bottom,0px))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;max-width:560px;width:100%;padding:24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.card .tag{align-self:flex-start;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:4px;background:var(--amber-soft);color:var(--amber)}
+.card .tag.money{background:var(--cash-soft);color:var(--cash)} .card .tag.danger{background:var(--heat-soft);color:var(--heat)}
+.card h2{margin:0;font-family:var(--font-display);font-weight:800;font-size:1.6rem;line-height:1.1;text-wrap:balance;letter-spacing:-.01em}
+.card p{margin:0;color:var(--muted);line-height:1.55}
+.card p b{color:var(--ink)}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{display:flex;flex-direction:column;gap:3px;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:12px 14px;cursor:pointer}
+.choice:hover{border-color:var(--ink)}
+.choice b{font-family:var(--font-display);font-size:1rem}
+.choice span{font-size:.8rem;color:var(--muted)}
+.termsheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;border:1px dashed var(--line);border-radius:8px;font-size:.86rem}
+.termsheet div{display:flex;flex-direction:column}
+.termsheet b{font-family:var(--font-mono);font-size:1.05rem}
+.hero-intro{display:flex;flex-direction:column;gap:14px}
+.hero-intro h1{margin:0;font-family:var(--font-display);font-weight:800;font-size:clamp(2.2rem,6vw,3.2rem);letter-spacing:-.03em;line-height:1}
+.howlist{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:.9rem}
+.howlist b{color:var(--ink)}
+.primary{align-self:flex-start;font-family:var(--font-display);font-weight:800;font-size:1.05rem;background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:12px 22px;cursor:pointer}
+.exitnum{font-family:var(--font-mono);font-weight:600;font-size:clamp(2rem,7vw,3rem);letter-spacing:-.03em;color:var(--cash)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;font-size:.9rem;z-index:30;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){.act,.meter .fill{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <p class="logo"><span class="flame" aria-hidden="true"></span>Burn Rate</p>
+      <label class="lab" for="coname">Company</label>
+      <input id="coname" maxlength="24" value="Untitled Labs" aria-label="Company name">
+    </div>
+    <div class="hstats" id="hstats"></div>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="box" aria-labelledby="h-metrics">
+        <h2 id="h-metrics">Metrics <span class="lab" id="monthlab"></span></h2>
+        <div id="runway"></div>
+        <div class="kpis" id="kpis"></div>
+      </section>
+      <section class="box" aria-labelledby="h-health">
+        <h2 id="h-health">Company health</h2>
+        <div class="meters" id="meters"></div>
+      </section>
+      <section class="box" aria-labelledby="h-chart">
+        <h2 id="h-chart">MRR vs burn <span class="lab">monthly</span></h2>
+        <div id="chart"></div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="box" aria-labelledby="h-plan">
+        <h2 id="h-plan">This month's plan</h2>
+        <div class="focusbar"><span class="lab">Founder focus</span><div class="pips" id="pips"></div><span class="empty" id="focusnote"></span></div>
+        <div class="actions" id="actions"></div>
+        <div class="row">
+          <div class="queue" id="queue"></div>
+          <button class="endbtn" id="endmonth" type="button">End month <kbd>Enter</kbd></button>
+        </div>
+      </section>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px">
+        <section class="box" aria-labelledby="h-team">
+          <h2 id="h-team">Team <span class="lab mono" id="payroll"></span></h2>
+          <div class="team" id="team"></div>
+        </section>
+        <section class="box" aria-labelledby="h-price">
+          <h2 id="h-price">Pricing</h2>
+          <div class="tiers" id="tiers"></div>
+          <div class="goal" id="goal"></div>
+        </section>
+      </div>
+    </div>
+
+    <div class="col log-col">
+      <section class="box" aria-labelledby="h-log">
+        <h2 id="h-log">Company log</h2>
+        <div class="log" id="log" aria-live="polite"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" hidden><div class="card" id="card" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+function money(n, dp) {
+  const s = n < 0 ? '-' : '', a = Math.abs(n);
+  if (a >= 1e9) return s + '$' + (a / 1e9).toFixed(dp ?? 2) + 'B';
+  if (a >= 1e6) return s + '$' + (a / 1e6).toFixed(dp ?? 2) + 'M';
+  if (a >= 1e4) return s + '$' + (a / 1e3).toFixed(0) + 'k';
+  if (a >= 1e3) return s + '$' + (a / 1e3).toFixed(1) + 'k';
+  return s + '$' + Math.round(a);
+}
+const num = n => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'k' : Math.round(n).toLocaleString();
+const pct = n => (n * 100).toFixed(1) + '%';
+
+/* ---------------- rules ---------------- */
+const SALARY = { eng: 12000, sales: 10000, mkt: 9000 };
+const ROLES = [
+  { k: 'eng', name: 'Engineers', ds: 'Ship faster, add tech debt' },
+  { k: 'sales', name: 'Sales reps', ds: 'Close enterprise deals' },
+  { k: 'mkt', name: 'Marketers', ds: 'Steady signups each month' }
+];
+const TIERS = [
+  { name: 'Hobby', price: 9, conv: 0.10, churn: -0.01, note: 'Easy to convert, low revenue' },
+  { name: 'Pro', price: 29, conv: 0.055, churn: 0, note: 'Balanced' },
+  { name: 'Business', price: 79, conv: 0.024, churn: 0.012, note: 'Fewer buyers, more churn' }
+];
+const STAGES = [
+  { name: 'Pre-seed' },
+  { name: 'Seed', need: 12000, min: 1.5e6, max: 3e6 },
+  { name: 'Series A', need: 100000, min: 7e6, max: 15e6 },
+  { name: 'Series B', need: 300000, min: 25e6, max: 50e6 },
+  { name: 'Series C', need: 900000, min: 60e6, max: 120e6 }
+];
+const IPO_MRR = 2.5e6, MAX_MONTHS = 72;
+
+const ACTIONS = [
+  { id: 'ship', name: 'Ship features', cost: 1, e: s => `+${shipGain(s).toFixed(0)} product, +${(3 + s.eng * 0.8).toFixed(0)} tech debt`,
+    run: s => { const g = shipGain(s); s.product = clamp(s.product + g, 0, 100); s.debt = clamp(s.debt + 3 + s.eng * 0.8, 0, 100); return [`Shipped a release. Product +${g.toFixed(0)}.`, 'good']; } },
+  { id: 'refactor', name: 'Pay down tech debt', cost: 1, e: s => `−${(6 + s.eng * 3).toFixed(0)} tech debt, +1 product`,
+    run: s => { const d = 6 + s.eng * 3; s.debt = clamp(s.debt - d, 0, 100); s.product = clamp(s.product + 1, 0, 100); return [`Refactoring sprint. Tech debt −${d.toFixed(0)}.`, 'good']; } },
+  { id: 'growth', name: 'Growth campaign', cost: 1, e: s => `Spend ${money(growthCost(s))}, about +${num(growthUsers(s))} users`, can: s => s.cash > growthCost(s),
+    run: s => { const c = growthCost(s), u = growthUsers(s) * rand(0.7, 1.3); s.cash -= c; s.users += u; s.brand = clamp(s.brand + 3, 0, 100); s.spentThisMonth += c; return [`Ran a campaign for ${money(c)}. +${num(u)} users.`, 'good']; } },
+  { id: 'sales', name: 'Founder-led sales', cost: 1, e: s => `About +${money(salesGain(s))} enterprise MRR`,
+    run: s => { const g = salesGain(s) * rand(0.5, 1.4); if (Math.random() < 0.25 - s.sales * 0.03) return ['Pitched three prospects. Nobody signed this month.', 'bad']; s.ent += g; return [`Closed an enterprise contract worth ${money(g)} MRR.`, 'good']; } },
+  { id: 'culture', name: 'Team offsite', cost: 1, e: s => `Spend ${money(2000 + headcount(s) * 800)}, +14 morale`,
+    run: s => { const c = 2000 + headcount(s) * 800; s.cash -= c; s.morale = clamp(s.morale + 14, 0, 100); return [`Took the team offsite for ${money(c)}. Morale +14.`, 'good']; } },
+  { id: 'pitch', name: 'Pitch investors', cost: 1, e: s => s.stage + 1 < STAGES.length ? `Pitch progress +${pitchGain(s).toFixed(0)}% toward ${STAGES[s.stage + 1].name}` : 'No more private rounds needed', can: s => s.stage + 1 < STAGES.length && s.freezeFund <= 0,
+    run: s => { s.pitch += pitchGain(s); return [`Took investor meetings. Pitch progress ${Math.min(100, s.pitch).toFixed(0)}%.`, '']; } },
+  { id: 'ipo', name: 'File for IPO', cost: 3, e: () => `Needs ${money(IPO_MRR)} MRR. Ends the game with a public listing.`, can: s => s.mrr >= IPO_MRR, show: s => s.stage >= 3,
+    run: s => { s.ipo = true; return ['Filed the S-1. The bankers are excited.', 'big']; } }
+];
+function headcount(s) { return s.eng + s.sales + s.mkt; }
+function moraleF(s) { return 0.55 + s.morale / 100 * 0.6; }
+function shipGain(s) { return (3 + 3 * Math.sqrt(s.eng + 0.5)) * (1 - s.debt / 140) * moraleF(s) * (1 - s.product / 160); }
+function growthCost(s) { return Math.round(8000 * Math.pow(1.6, s.stage)); }
+function growthUsers(s) { return (220 + s.mkt * 160 + s.brand * 18) * Math.pow(1.35, s.stage) * (0.3 + s.product / 90); }
+function salesGain(s) { return (700 + s.sales * 800) * Math.pow(1.3, s.stage) * (0.3 + s.product / 90) * moraleF(s); }
+function pitchGain(s) { return 30 + s.brand * 0.3 + s.hype * 0.6; }
+function burn(s) { return s.eng * SALARY.eng + s.sales * SALARY.sales + s.mkt * SALARY.mkt + 4000 + s.users * 0.12; }
+function focusMax(s) { return (s.morale < 25 ? 2 : 3) - (s.focusPenalty || 0); }
+function valuation(s) { const growth = clamp(s.growth, -0.2, 0.4); return Math.max(s.mrr * 12 * (8 + growth * 60 + s.hype * 0.15), 2e6 + s.users * 40); }
+
+/* ---------------- events ---------------- */
+const EVENTS = [
+  { id: 'viral', tag: 'Opportunity', title: 'Your launch post is going viral', when: s => s.month > 2,
+    body: s => `A post about ${s.name} hit the front page and signups are spiking. You can pour money on it while it's hot.`,
+    choices: [
+      { b: 'Boost it', d: s => `Spend ${money(growthCost(s) * 1.5)} on ads. Big user bump.`, f: s => { const c = growthCost(s) * 1.5; s.cash -= c; const u = growthUsers(s) * 2.5; s.users += u; s.brand += 10; return `Boosted the post. +${num(u)} users.`; } },
+      { b: 'Let it ride', d: () => 'Free attention, smaller bump.', f: s => { const u = growthUsers(s) * 0.9; s.users += u; s.brand += 6; return `Rode the wave for free. +${num(u)} users.`; } }
+    ] },
+  { id: 'outage', tag: 'Crisis', danger: true, title: 'Production is down at 3 a.m.', when: s => s.month > 3,
+    body: s => `The database fell over and customers are tweeting. Tech debt is at ${s.debt.toFixed(0)}.`,
+    choices: [
+      { b: 'All hands on deck', d: () => 'Morale −10, tech debt −8.', f: s => { s.morale -= 10; s.debt -= 8; return 'The team pulled an all-nighter and fixed it properly.'; } },
+      { b: 'Credit every customer', d: s => `Costs ${money(Math.max(2000, s.mrr * 0.3))}. Keeps trust.`, f: s => { s.cash -= Math.max(2000, s.mrr * 0.3); s.brand += 2; return 'Issued service credits. Customers appreciated it.'; } },
+      { b: 'Patch it and move on', d: () => 'Churn spike this month, tech debt +6.', f: s => { s.users *= 0.93; s.debt += 6; return 'Hot-patched it. Some users left.'; } }
+    ] },
+  { id: 'poach', tag: 'Team', title: 'Big Tech is poaching your best engineer', when: s => s.eng >= 2,
+    body: () => 'Your senior engineer has an offer for twice their salary. They say they would rather stay if you can meet them partway.',
+    choices: [
+      { b: 'Counteroffer', d: () => 'One-time $40k retention bonus.', f: s => { s.cash -= 40000; s.morale += 4; return 'Paid a retention bonus. They are staying.'; } },
+      { b: 'Wish them well', d: () => 'Lose one engineer, morale −8.', f: s => { s.eng -= 1; s.morale -= 8; return 'Your senior engineer left for Big Tech.'; } }
+    ] },
+  { id: 'pilot', tag: 'Opportunity', title: 'A Fortune 500 wants a paid pilot', when: s => s.product > 30,
+    body: () => 'They will pay well, but they want custom features that nobody else will use.',
+    choices: [
+      { b: 'Sign the pilot', d: s => `+${money(5000 * Math.pow(1.3, s.stage))} MRR, tech debt +15.`, f: s => { s.ent += 5000 * Math.pow(1.3, s.stage); s.debt += 15; return 'Signed the pilot and started building custom features.'; } },
+      { b: 'Stay focused', d: () => 'Product +3, morale +4.', f: s => { s.product += 3; s.morale += 4; return 'Turned down the pilot to stay on the roadmap.'; } }
+    ] },
+  { id: 'acquire', tag: 'Offer', money: true, title: 'An acquisition offer lands in your inbox', when: s => s.mrr > 25000 && s.month > 12,
+    body: s => `A public company offers to buy ${s.name} for <b>${money(valuation(s) * 0.7)}</b>. Your stake would be worth <b>${money(valuation(s) * 0.7 * s.equity)}</b>.`,
+    choices: [
+      { b: 'Accept and exit', d: () => 'The game ends with this sale.', f: s => { s.exit = { kind: 'Acquired', value: valuation(s) * 0.7 }; return 'Signed the acquisition agreement.'; } },
+      { b: 'Decline', d: () => 'Morale +6. The team believes in you.', f: s => { s.morale += 6; s.hype += 5; return 'Declined the offer. The team is fired up.'; } }
+    ] },
+  { id: 'breach', tag: 'Crisis', danger: true, title: 'A security researcher found a data leak', when: s => s.users > 3000,
+    body: () => 'Some customer emails were exposed. Nobody else knows yet.',
+    choices: [
+      { b: 'Disclose publicly', d: () => 'Brand −8 now, product +4 from the security push.', f: s => { s.brand -= 8; s.product += 4; s.debt -= 5; return 'Disclosed the leak and shipped a security overhaul.'; } },
+      { b: 'Fix it quietly', d: () => 'No cost now. A 40% chance it leaks to the press later.', f: s => { if (Math.random() < 0.4) { s.users *= 0.7; s.brand -= 25; s.morale -= 10; return 'The cover-up leaked. 30% of users left.'; } return 'Fixed the leak quietly. Nobody found out.'; } }
+    ] },
+  { id: 'burnout', tag: 'Founder', title: 'You are running on empty', when: s => s.month > 6 && s.morale < 70,
+    body: () => 'Months of 80-hour weeks are catching up with you. Your cofounder suggests a week off.',
+    choices: [
+      { b: 'Take the week off', d: () => 'One less focus next month. Morale +12.', f: s => { s.focusPenalty = 1; s.morale += 12; return 'Took a week off and came back sharper.'; } },
+      { b: 'Push through', d: () => 'Morale −12.', f: s => { s.morale -= 12; return 'Pushed through. The team noticed.'; } }
+    ] },
+  { id: 'demoday', tag: 'Opportunity', title: 'Invited to a top accelerator Demo Day', when: s => s.stage <= 1 && s.month > 3,
+    body: () => 'Five minutes on stage in front of two hundred investors.',
+    choices: [
+      { b: 'Rehearse and present', d: () => 'Hype +15, pitch progress +35%.', f: s => { s.hype += 15; s.pitch += 35; return 'Nailed the Demo Day pitch.'; } },
+      { b: 'Skip it', d: () => 'Product +3.', f: s => { s.product += 3; return 'Skipped Demo Day to keep shipping.'; } }
+    ] },
+  { id: 'competitor', tag: 'Market', danger: true, title: 'A competitor just raised $60M', when: s => s.month > 8,
+    body: () => 'They are spending heavily on ads in your market. Your team is nervous.',
+    choices: [
+      { b: 'Rally the team', d: () => 'Morale +5, brand −4.', f: s => { s.morale += 5; s.brand -= 4; return 'Gave an all-hands talk about focus.'; } },
+      { b: 'Price war', d: () => '20% of current MRR as discounts this month, users +15%.', f: s => { s.cash -= s.mrr * 0.2; s.users *= 1.15; return 'Discounted aggressively to hold the market.'; } }
+    ] },
+  { id: 'prepay', tag: 'Money', money: true, title: 'A big customer wants to prepay annually', when: s => s.ent > 5000,
+    body: () => 'They will pay a full year up front for a 20% discount.',
+    choices: [
+      { b: 'Take the cash', d: s => `+${money(s.ent * 0.25 * 12 * 0.8)} cash now.`, f: s => { s.cash += s.ent * 0.25 * 12 * 0.8; return 'Collected an annual prepayment.'; } },
+      { b: 'Keep monthly billing', d: () => 'Nothing changes.', f: () => 'Kept them on monthly billing.' }
+    ] },
+  { id: 'opensource', tag: 'Opportunity', title: 'Developers love your open-source SDK', when: s => s.product > 25,
+    body: () => 'A popular developer newsletter featured your SDK. Contributors are sending pull requests.',
+    choices: [
+      { b: 'Invest in community', d: () => 'Spend $15k. Brand +12, product +4.', f: s => { s.cash -= 15000; s.brand += 12; s.product += 4; return 'Hired a community lead for the summer.'; } },
+      { b: 'Say thanks', d: () => 'Brand +5.', f: s => { s.brand += 5; return 'Thanked the community on social media.'; } }
+    ] },
+  { id: 'recession', tag: 'Market', danger: true, title: 'Recession headlines everywhere', when: s => s.month > 10,
+    body: () => 'VCs are pausing new deals. Customers are reviewing every software bill.',
+    choices: [
+      { b: 'Cut costs now', d: () => 'Lay off 20% of staff. Morale −15, burn drops.', f: s => { for (const k of ['mkt', 'sales', 'eng']) { const cut = Math.floor(s[k] * 0.25); s[k] -= cut; } s.morale -= 15; return 'Made painful layoffs to extend runway.'; } },
+      { b: 'Stay the course', d: () => 'Fundraising frozen for 4 months, churn up.', f: s => { s.freezeFund = 4; s.users *= 0.94; return 'Held steady while the market cooled.'; } }
+    ] },
+  { id: 'press', tag: 'Press', title: 'A major tech blog wants to profile you', when: s => s.mrr > 3000,
+    body: () => 'They want an exclusive on your growth story.',
+    choices: [
+      { b: 'Do the interview', d: () => 'Brand +14, hype +8.', f: s => { s.brand += 14; s.hype += 8; return 'Published a glowing profile.'; } },
+      { b: 'Stay stealthy', d: () => 'Product +2.', f: s => { s.product += 2; return 'Passed on press to keep building.'; } }
+    ] },
+  { id: 'hackathon', tag: 'Team', title: 'An engineer pitches a hackathon idea', when: s => s.eng >= 2,
+    body: () => 'They think an AI feature built over a weekend could become your next big thing.',
+    choices: [
+      { b: 'Greenlight it', d: () => '50% chance: product +12. Otherwise tech debt +8.', f: s => { if (Math.random() < 0.5) { s.product += 12; s.brand += 4; return 'The hackathon feature is a hit with users.'; } s.debt += 8; return 'The hackathon feature flopped and left a mess.'; } },
+      { b: 'Not now', d: () => 'Morale −3.', f: s => { s.morale -= 3; return 'Shelved the hackathon idea.'; } }
+    ] }
+];
+
+/* ---------------- state ---------------- */
+let S;
+function newGame() {
+  S = {
+    name: $('coname').value.trim() || 'Untitled Labs', month: 1, cash: 450000, eng: 1, sales: 0, mkt: 0, users: 150, product: 18, debt: 8, morale: 75, brand: 4, hype: 0,
+    tier: 1, ent: 0, mrr: 0, growth: 0, equity: 0.85, stage: 0, pitch: 0, freezeFund: 0, focusPenalty: 0, queue: [], hiresThisMonth: 0,
+    hist: [], log: [], seen: {}, spentThisMonth: 0, ipo: false, exit: null, over: false, bridged: -1, lastMrr: 0, milestones: {}
+  };
+  calcMrr(S); S.hist.push({ m: 0, mrr: S.mrr, cash: S.cash, burn: burn(S) });
+  addLog(0, `${S.name} is incorporated. You have ${money(S.cash)} from pre-seed angels and own 85% of the company.`, 'big');
+}
+function calcMrr(s) { const t = TIERS[s.tier]; s.selfServe = s.users * t.conv * (0.55 + s.product / 100); s.mrr = s.selfServe * t.price + s.ent; }
+function addLog(m, text, kind) { let g = S.log.find(x => x.m === m); if (!g) { g = { m, items: [] }; S.log.unshift(g); } g.items.push({ text, kind }); }
+
+/* ---------------- turn ---------------- */
+function endMonth() {
+  if (S.over || !$('overlay').hidden) return;
+  const s = S, m = s.month;
+  s.spentThisMonth = 0;
+  if (s.queue.length === 0) addLog(m, 'You spent the month in meetings that could have been emails.', '');
+  for (const id of s.queue) { const a = ACTIONS.find(x => x.id === id); const [t, k] = a.run(s); addLog(m, t, k); }
+  s.queue = []; s.focusPenalty = 0; s.hiresThisMonth = 0;
+  if (s.ipo) return finish({ kind: 'IPO', value: valuation(s) * 1.3 });
+
+  // simulation
+  const prevMrr = s.mrr;
+  s.debt = clamp(s.debt + s.eng * 0.4, 0, 100);
+  s.product = clamp(s.product - 0.6, 0, 100);
+  s.brand = clamp(s.brand * 0.96, 0, 100);
+  const mktUsers = s.mkt * (110 + s.brand * 4) * Math.pow(1.2, s.stage) * (0.3 + s.product / 90);
+  const organic = s.users * (0.01 + s.product / 100 * 0.035 + s.brand / 100 * 0.03) * rand(0.7, 1.3);
+  const churn = clamp(0.04 + s.debt / 100 * 0.08 + TIERS[s.tier].churn - s.product / 100 * 0.025 + (s.morale < 30 ? 0.01 : 0), 0.01, 0.2);
+  const lost = s.users * churn;
+  s.users = Math.max(0, s.users + mktUsers + organic - lost);
+  s.ent = s.ent * 0.96 + s.sales * 320 * Math.pow(1.25, s.stage) * (0.3 + s.product / 90) * moraleF(s);
+  calcMrr(s);
+  const b = burn(s);
+  s.cash += s.mrr - b;
+  s.growth = prevMrr > 500 ? (s.mrr - prevMrr) / prevMrr : 0;
+  s.hype = clamp(s.hype * 0.85 + clamp(s.growth, 0, 0.5) * 50, 0, 60);
+  s.morale += (60 - s.morale) * 0.05 - (s.debt > 60 ? 3 : 0) - (s.cash / b < 3 ? 4 : 0) - (headcount(s) > 25 ? 1 : 0);
+  s.morale = clamp(s.morale, 0, 100);
+  if (s.freezeFund > 0) s.freezeFund--;
+  addLog(m, `Revenue ${money(s.mrr)}, burn ${money(b)}. Net users ${organic + mktUsers - lost >= 0 ? '+' : ''}${num(organic + mktUsers - lost)} (churn ${pct(churn)}).`, s.mrr >= b ? 'good' : '');
+  if (s.morale < 25 && headcount(s) > 1 && Math.random() < 0.4) { const k = pick(['eng', 'sales', 'mkt'].filter(k => s[k] > 0)); s[k]--; addLog(m, `Morale is low. One of your ${ROLES.find(r => r.k === k).name.toLowerCase()} quit.`, 'bad'); }
+  s.hist.push({ m, mrr: s.mrr, cash: s.cash, burn: b });
+  milestones(s, m);
+
+  s.month++;
+  // death and exits
+  if (s.cash < 0) {
+    if (s.bridged < s.stage) return bridgeOffer();
+    return finish({ kind: 'Bankrupt', value: 0 });
+  }
+  if (s.month > MAX_MONTHS) return finish({ kind: 'Acquired', value: valuation(s) * 0.8, timeout: true });
+  // fundraising
+  if (s.pitch >= 100) return termSheet();
+  maybeEvent();
+  render();
+}
+function milestones(s, m) {
+  const list = [[1000, 'First $1k MRR'], [10000, '$10k MRR'], [100000, '$100k MRR'], [1e6, '$1M MRR']];
+  for (const [v, label] of list) if (s.mrr >= v && !s.milestones[v]) { s.milestones[v] = 1; addLog(m, `Milestone: ${label}.`, 'big'); toast(`Milestone: ${label}`); }
+  if (s.mrr > burn(s) && !s.milestones.profit) { s.milestones.profit = 1; addLog(m, 'Milestone: default alive. Revenue now covers burn.', 'big'); toast('Default alive: revenue covers burn'); }
+}
+function maybeEvent() {
+  const pool = EVENTS.filter(e => e.when(S) && (S.seen[e.id] || 0) < (e.id === 'acquire' ? 3 : 1) && !(S.seen[e.id] && e.id === 'acquire' && S.month - S.seen['acq_m'] < 12));
+  if (!pool.length || Math.random() > 0.5) return;
+  const e = pick(pool);
+  S.seen[e.id] = (S.seen[e.id] || 0) + 1; if (e.id === 'acquire') S.seen.acq_m = S.month;
+  showCard({
+    tag: e.tag, tagCls: e.danger ? 'danger' : e.money ? 'money' : '', title: e.title, body: e.body(S),
+    choices: e.choices.map(c => ({ b: c.b, d: typeof c.d === 'function' ? c.d(S) : c.d, f: () => {
+      const t = c.f(S); clampAll(S); addLog(S.month - 1, `${e.title}: ${t}`, 'event');
+      if (S.exit) return finish(S.exit);
+      calcMrr(S); hideCard(); render();
+    } }))
+  });
+}
+function clampAll(s) { for (const k of ['product', 'debt', 'morale', 'brand', 'hype']) s[k] = clamp(s[k], 0, k === 'hype' ? 60 : 100); s.users = Math.max(0, s.users); for (const k of ['eng', 'sales', 'mkt']) s[k] = Math.max(0, s[k]); }
+
+function termSheet() {
+  const s = S, next = STAGES[s.stage + 1];
+  s.pitch = 0;
+  if (s.mrr < next.need) {
+    addLog(s.month - 1, `Investors passed on your ${next.name}. They want to see ${money(next.need)} MRR first.`, 'bad');
+    s.pitch = 25; s.hype = clamp(s.hype + 3, 0, 60);
+    showCard({ tag: 'Fundraising', tagCls: 'danger', title: `Investors passed on your ${next.name}`, body: `The feedback was consistent: come back at <b>${money(next.need)} MRR</b>. You are at <b>${money(s.mrr)}</b>.`, choices: [{ b: 'Back to work', d: 'Pitch progress kept at 25%.', f: () => { hideCard(); maybeEvent(); render(); } }] });
+    return;
+  }
+  const pre = Math.max(valuation(s), next.min * 4), amount = clamp(pre * 0.22, next.min, next.max), post = pre + amount, dil = amount / post;
+  const hot = s.hype > 25;
+  showCard({
+    tag: 'Term sheet', tagCls: 'money', title: `${next.name} term sheet from ${pick(hot ? ['Sequoia-tier fund', 'a top-decile firm', 'a famous solo GP'] : ['a solid mid-tier fund', 'a regional VC', 'a corporate venture arm'])}`,
+    body: `${hot ? 'Your growth has investors competing.' : 'One firm came through.'} Accepting adds the cash and dilutes your stake.`,
+    extra: `<div class="termsheet"><div><span class="lab">Raise</span><b>${money(amount)}</b></div><div><span class="lab">Pre-money</span><b>${money(pre)}</b></div><div><span class="lab">Dilution</span><b>${pct(dil)}</b></div><div><span class="lab">Your stake after</span><b>${pct(s.equity * (1 - dil))}</b></div></div>`,
+    choices: [
+      { b: 'Sign it', d: `+${money(amount)} cash. Morale +10.`, f: () => { s.cash += amount; s.equity *= (1 - dil); s.stage++; s.morale = clamp(s.morale + 10, 0, 100); addLog(s.month - 1, `Closed a ${money(amount)} ${next.name} at ${money(pre)} pre-money. You now own ${pct(s.equity)}.`, 'big'); toast(`${next.name} closed: ${money(amount)}`); hideCard(); render(); } },
+      { b: 'Walk away', d: 'Keep your equity. Pitch progress resets.', f: () => { addLog(s.month - 1, `Turned down the ${next.name} term sheet.`, 'event'); hideCard(); render(); } }
+    ]
+  });
+}
+function bridgeOffer() {
+  const s = S; s.bridged = s.stage;
+  const amt = Math.max(150000, burn(s) * 4), dil = 0.08;
+  showCard({
+    tag: 'Out of cash', tagCls: 'danger', title: 'You cannot make payroll',
+    body: `Your bank balance is <b>${money(s.cash)}</b>. An existing investor offers a <b>${money(amt)}</b> bridge note for ${pct(dil)} of the company. This is the only bridge you will get this stage.`,
+    choices: [
+      { b: 'Take the bridge', d: `+${money(amt)}, your stake falls to ${pct(s.equity * (1 - dil))}.`, f: () => { s.cash += amt; s.equity *= 1 - dil; s.morale -= 8; addLog(s.month - 1, `Took a ${money(amt)} bridge note to survive.`, 'bad'); hideCard(); render(); } },
+      { b: 'Shut it down', d: 'The game ends.', f: () => finish({ kind: 'Bankrupt', value: 0 }) }
+    ]
+  });
+}
+function finish(exit) {
+  const s = S; s.over = true; s.exit = exit;
+  const stake = exit.value * s.equity;
+  const best = +store('br-best') || 0, isBest = stake > best; if (isBest) store('br-best', String(Math.round(stake)));
+  const rating = exit.kind === 'Bankrupt' ? 'Lessons learned' : stake >= 1e9 ? 'Decacorn founder' : stake >= 1e8 ? 'Unicorn energy' : stake >= 2e7 ? 'Life-changing exit' : stake >= 2e6 ? 'Solid exit' : 'Acqui-hire';
+  const line = exit.kind === 'Bankrupt' ? `${s.name} ran out of money in month ${s.month - 1}. Most startups do. The next one will go better.`
+    : exit.kind === 'IPO' ? `${s.name} rang the opening bell in month ${s.month - 1} at a ${money(exit.value)} market cap.`
+    : exit.timeout ? `Six years in, the board sold ${s.name} for ${money(exit.value)}.` : `${s.name} was acquired for ${money(exit.value)} in month ${s.month - 1}.`;
+  addLog(s.month - 1, line, 'big');
+  showCard({
+    tag: exit.kind, tagCls: exit.kind === 'Bankrupt' ? 'danger' : 'money', title: rating, body: line,
+    extra: `<div><span class="lab">Your stake (${pct(s.equity)})</span><div class="exitnum">${money(stake)}</div></div>
+      <div class="termsheet"><div><span class="lab">Peak MRR</span><b>${money(Math.max(...s.hist.map(h => h.mrr)))}</b></div><div><span class="lab">Months</span><b>${s.month - 1}</b></div><div><span class="lab">Users</span><b>${num(s.users)}</b></div><div><span class="lab">Best exit so far</span><b>${money(Math.max(best, stake))}${isBest && stake > 0 ? ' · new' : ''}</b></div></div>`,
+    choices: [{ b: 'Start another company', d: 'Same name, fresh cap table.', f: () => { hideCard(); newGame(); render(); } }]
+  });
+  render();
+}
+
+/* ---------------- UI ---------------- */
+function showCard(o) {
+  const c = $('card');
+  c.innerHTML = `${o.tag ? `<span class="tag ${o.tagCls || ''}">${o.tag}</span>` : ''}<h2 id="cardtitle">${o.title}</h2>${o.body ? `<p>${o.body}</p>` : ''}${o.extra || ''}<div class="choices"></div>`;
+  c.setAttribute('aria-labelledby', 'cardtitle');
+  const box = c.querySelector('.choices');
+  o.choices.forEach((ch, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'choice'; b.id = 'choice-' + i; b.innerHTML = `<b>${ch.b}</b><span>${ch.d}</span>`; b.addEventListener('click', ch.f); box.appendChild(b); });
+  $('overlay').hidden = false;
+  setTimeout(() => box.querySelector('button')?.focus(), 30);
+}
+function hideCard() { $('overlay').hidden = true; }
+let toastT; function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2600); }
+
+function render() {
+  const s = S; calcMrr(s);
+  const b = burn(s), net = s.mrr - b, runway = net >= 0 ? Infinity : s.cash / -net;
+  const prev = s.hist.length > 1 ? s.hist[s.hist.length - 2] : null;
+  const yr = Math.floor((s.month - 1) / 12) + 1, mo = (s.month - 1) % 12 + 1;
+  $('monthlab').textContent = `Year ${yr} · Month ${mo}`;
+  $('hstats').innerHTML = `<span class="chip stage">${STAGES[s.stage].name}</span><span class="chip">Month <b>${s.month}</b>/72</span><span class="chip">Your stake <b>${pct(s.equity)}</b></span><span class="chip">Valuation <b>${money(valuation(s))}</b></span>`;
+  const rw = runway === Infinity ? ['ok', 'Default alive. Revenue covers burn.'] : runway < 4 ? ['bad', `${runway.toFixed(1)} months of runway left`] : runway < 9 ? ['warn', `${runway.toFixed(1)} months of runway`] : ['ok', runway > 36 ? 'More than 36 months of runway' : `${runway.toFixed(0)} months of runway`];
+  $('runway').innerHTML = `<div class="runway ${rw[0]}">${rw[1]}</div>`;
+  const delta = (v, p) => { if (!p) return ''; const d = v - p; return `<span class="d ${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${money(Math.abs(d))}</span>`; };
+  $('kpis').innerHTML = `
+    <div class="kpi big"><span class="lab">Cash in bank</span><span class="v mono">${money(s.cash)}</span>${delta(s.cash, prev && prev.cash)}</div>
+    <div class="kpi"><span class="lab">MRR</span><span class="v mono">${money(s.mrr)}</span>${s.hist.length > 1 ? `<span class="d ${s.growth >= 0 ? 'up' : 'down'}">${s.growth >= 0 ? '▲' : '▼'} ${pct(Math.abs(s.growth))} MoM</span>` : '<span class="d">first month</span>'}</div>
+    <div class="kpi"><span class="lab">Burn</span><span class="v mono">${money(b)}</span><span class="d">per month</span></div>
+    <div class="kpi"><span class="lab">Users</span><span class="v mono">${num(s.users)}</span><span class="d">${num(s.selfServe)} paying</span></div>
+    <div class="kpi"><span class="lab">Enterprise</span><span class="v mono">${money(s.ent)}</span><span class="d">of MRR</span></div>`;
+  const meter = (n, v, col, inv) => `<div class="meter"><span>${n}</span><div class="track"><div class="fill" style="width:${v}%;background:${col}"></div></div><span class="n">${v.toFixed(0)}</span></div>`;
+  $('meters').innerHTML = meter('Product', s.product, 'var(--cash)') + meter('Tech debt', s.debt, s.debt > 60 ? 'var(--heat)' : 'var(--amber)') + meter('Morale', s.morale, s.morale < 30 ? 'var(--heat)' : 'var(--focus)') + meter('Brand', s.brand, 'var(--amber)') + meter('Investor hype', s.hype / 60 * 100, 'var(--focus)');
+  renderChart();
+  // focus
+  const fm = focusMax(s), used = s.queue.reduce((a, id) => a + ACTIONS.find(x => x.id === id).cost, 0);
+  $('pips').innerHTML = Array.from({ length: fm }, (_, i) => `<span class="pip ${i < used ? 'used' : ''}"></span>`).join('');
+  $('focusnote').textContent = s.morale < 25 ? 'Low morale costs you one focus.' : s.focusPenalty ? 'Recovering from time off.' : `${fm - used} left`;
+  const acts = $('actions'); acts.innerHTML = '';
+  for (const a of ACTIONS) {
+    if (a.show && !a.show(s)) continue;
+    const q = s.queue.filter(x => x === a.id).length;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'act'; btn.id = 'act-' + a.id;
+    btn.disabled = s.over || used + a.cost > fm || (a.can && !a.can(s));
+    btn.innerHTML = `<span class="t">${a.name}<span class="c">${'●'.repeat(a.cost)}</span></span><span class="e">${a.e(s)}</span>${q ? `<span class="q">×${q}</span>` : ''}`;
+    btn.addEventListener('click', () => { s.queue.push(a.id); render(); });
+    acts.appendChild(btn);
+  }
+  const qe = $('queue'); qe.innerHTML = s.queue.length ? '' : '<span class="empty">Pick actions above, then end the month.</span>';
+  s.queue.forEach((id, i) => { const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'qi'; b2.textContent = ACTIONS.find(x => x.id === id).name; b2.setAttribute('aria-label', 'Remove ' + b2.textContent); b2.addEventListener('click', () => { s.queue.splice(i, 1); render(); }); qe.appendChild(b2); });
+  $('endmonth').disabled = s.over;
+  // team
+  $('payroll').textContent = `${money(s.eng * SALARY.eng + s.sales * SALARY.sales + s.mkt * SALARY.mkt)}/mo`;
+  const team = $('team'); team.innerHTML = '';
+  for (const r of ROLES) {
+    const div = document.createElement('div'); div.className = 'role';
+    div.innerHTML = `<div><div class="nm">${r.name}</div><div class="ds">${r.ds} · ${money(SALARY[r.k])}/mo</div></div><div class="stepper"><button type="button" id="fire-${r.k}" aria-label="Let go one ${r.name}">−</button><span class="mono">${s[r.k]}</span><button type="button" id="hire-${r.k}" aria-label="Hire one ${r.name}">+</button></div>`;
+    const [minus, plus] = div.querySelectorAll('button');
+    minus.disabled = s.over || s[r.k] === 0;
+    plus.disabled = s.over || s.hiresThisMonth >= 2 + s.stage || s.cash < 8000;
+    plus.title = s.hiresThisMonth >= 2 + s.stage ? `You can hire ${2 + s.stage} people per month at this stage` : 'Recruiting fee $6k';
+    minus.addEventListener('click', () => { s[r.k]--; s.cash -= SALARY[r.k]; s.morale = clamp(s.morale - 7, 0, 100); s.hiresThisMonth = Math.max(0, s.hiresThisMonth - 1); addLog(s.month, `Let go one of your ${r.name.toLowerCase()} (one month severance). Morale −7.`, 'bad'); render(); });
+    plus.addEventListener('click', () => { s[r.k]++; s.cash -= 6000; s.hiresThisMonth++; addLog(s.month, `Hired a new ${r.name.toLowerCase().replace(/s$/, '').replace('sales rep', 'sales rep')}.`, ''); render(); });
+    team.appendChild(div);
+  }
+  const tiers = $('tiers'); tiers.innerHTML = '';
+  TIERS.forEach((t, i) => { const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'tier'; b2.id = 'tier-' + i; b2.setAttribute('aria-pressed', String(s.tier === i)); b2.innerHTML = `<span>${t.name}</span><b>$${t.price}/mo</b><small>${t.note}</small>`; b2.disabled = s.over; b2.addEventListener('click', () => { if (s.tier !== i) { s.tier = i; addLog(s.month, `Changed pricing to ${t.name} at $${t.price}/mo.`, ''); render(); } }); tiers.appendChild(b2); });
+  const next = STAGES[s.stage + 1];
+  const goalTxt = next ? [`${next.name} needs ${money(next.need)} MRR`, s.mrr / next.need] : [`IPO needs ${money(IPO_MRR)} MRR`, s.mrr / IPO_MRR];
+  $('goal').innerHTML = `<div class="row"><span>${goalTxt[0]}</span><span class="mono">${pct(Math.min(1, goalTxt[1]))}</span></div><div class="track"><div class="fill" style="width:${Math.min(100, goalTxt[1] * 100)}%"></div></div>${next && s.stage + 1 < STAGES.length ? `<span class="empty">Pitch progress ${Math.min(100, s.pitch).toFixed(0)}%${s.freezeFund > 0 ? ` · VCs paused for ${s.freezeFund} more months` : ''}</span>` : ''}`;
+  // log
+  $('log').innerHTML = s.log.slice(0, 40).map(g => `<div class="month"><h3><span>${g.m === 0 ? 'DAY ONE' : 'MONTH ' + g.m}</span></h3>${g.items.map(i => `<div class="li ${i.kind}">${i.text}</div>`).join('')}</div>`).join('');
+  try { store('br-save', JSON.stringify(S)); } catch (e) {}
+}
+
+function renderChart() {
+  const h = S.hist.slice(-36), Wd = 280, Hd = 150, pl = 40, pr = 8, pt = 10, pb = 22;
+  for (const p of h) if (p.burn == null) p.burn = 0;
+  const maxV = Math.max(1000, ...h.map(p => Math.max(p.mrr, p.burn)));
+  const minV = 0;
+  const nice = v => { const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * e; };
+  const top = nice(maxV), bot = minV < 0 ? -nice(-minV) : 0;
+  const X = i => pl + (h.length < 2 ? 0 : i / (h.length - 1)) * (Wd - pl - pr);
+  const Y = v => pt + (1 - (v - bot) / (top - bot)) * (Hd - pt - pb);
+  const line = k => h.map((p, i) => `${X(i).toFixed(1)},${Y(p[k]).toFixed(1)}`).join(' ');
+  const ticks = [bot, (top + bot) / 2, top];
+  const area = h.length > 1 ? `M${X(0)},${Y(Math.max(0, bot))} L${line('mrr').split(' ').join(' L')} L${X(h.length - 1)},${Y(Math.max(0, bot))} Z` : '';
+  const last = h[h.length - 1];
+  $('chart').innerHTML = `<svg class="chart" viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="MRR and burn over the last ${h.length} months">
+    ${ticks.map(t => `<line x1="${pl}" x2="${Wd - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)" stroke-width="1"/><text x="${pl - 5}" y="${Y(t) + 3}" text-anchor="end" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--muted)">${money(t, 1)}</text>`).join('')}
+    ${area ? `<path d="${area}" fill="var(--cash-soft)"/>` : ''}
+    <polyline points="${line('burn')}" fill="none" stroke="var(--heat)" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <polyline points="${line('mrr')}" fill="none" stroke="var(--cash)" stroke-width="2.2"/>
+    <circle cx="${X(h.length - 1)}" cy="${Y(last.mrr)}" r="3.5" fill="var(--cash)"/>
+    <text x="${pl}" y="${Hd - 6}" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--muted)">M${h[0].m}</text>
+    <text x="${Wd - pr}" y="${Hd - 6}" text-anchor="end" font-size="9" font-family="JetBrains Mono, monospace" fill="var(--muted)">M${last.m}</text>
+    <g font-size="9" font-family="Instrument Sans, sans-serif"><rect x="${pl + 6}" y="${pt + 2}" width="10" height="3" fill="var(--cash)"/><text x="${pl + 20}" y="${pt + 6}" fill="var(--ink)">MRR</text><rect x="${pl + 50}" y="${pt + 2}" width="10" height="3" fill="var(--heat)"/><text x="${pl + 64}" y="${pt + 6}" fill="var(--ink)">Burn</text></g>
+  </svg>`;
+}
+
+function intro() {
+  const best = +store('br-best') || 0;
+  showCard({
+    tag: 'Founder mode', title: 'You just quit your job to start a company',
+    body: `You have <b>$450k</b> from angels, one engineer and a rough prototype. Grow revenue, raise rounds, keep the team together and don't run out of cash. ${best ? `Your best exit so far is <b>${money(best)}</b>.` : ''}`,
+    extra: `<ul class="howlist"><li><b>Each month</b> you get 3 focus points to spend on actions.</li><li><b>Hire</b> people to grow faster. Every hire adds to your monthly burn.</li><li><b>Raise rounds</b> by pitching once you hit the MRR target. Each round dilutes your stake.</li><li><b>Win</b> by IPO at ${money(IPO_MRR)} MRR, or by taking an acquisition offer. Your score is what your stake is worth.</li></ul>`,
+    choices: [{ b: 'Incorporate the company', d: 'Rename it in the header any time.', f: () => { hideCard(); render(); } }]
+  });
+}
+
+/* ---------------- boot ---------------- */
+function start() {
+  const savedName = store('br-name'); if (savedName) $('coname').value = savedName;
+  let restored = false;
+  try { const raw = store('br-save'); if (raw) { const o = JSON.parse(raw); if (o && !o.over && o.hist) { S = o; restored = true; } } } catch (e) {}
+  if (!restored) newGame();
+  $('coname').addEventListener('input', e => { S.name = e.target.value.trim() || 'Untitled Labs'; store('br-name', S.name); });
+  $('endmonth').addEventListener('click', endMonth);
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && $('overlay').hidden && document.activeElement?.id !== 'coname' && !(document.activeElement?.tagName === 'BUTTON')) { e.preventDefault(); endMonth(); } });
+  render();
+  if (!restored) intro();
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start();
+})();
+</script>
